@@ -8,7 +8,7 @@ set "YELLOW=[33m"
 set "RED=[31m"
 set "RESET=[0m"
 
-SET SRC=src/main.c
+SET SRC=src/*.c
 SET OUT=build/main.exe
 SET CC=gcc
 SET CFLAGS=-Wall -Wextra -O2
@@ -21,7 +21,6 @@ SET LIBS=
 
 
 IF NOT EXIST build mkdir build
-IF NOT EXIST include mkdir include
 
 call :color_echo "[INFO] Compiling %SRC% to %OUT%..." "Green"
 %CC% %CFLAGS% %INCLUDES% -o %OUT% %SRC% %LDFLAGS% %LIBS%
