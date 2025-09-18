@@ -142,6 +142,8 @@ void add_unique(DependencyList *list, const char *path) {
 }
 
 
+
+
 void parse_config(const char *filename, DependencyList *list) {
 
     FILE *f;
@@ -164,6 +166,9 @@ void parse_config(const char *filename, DependencyList *list) {
     }     
 
     char line[MAX_PATH];
+    char root_folder[MAX_PATH];
+    char has_root_folder = 0;
+    
     while (fgets(line, sizeof(line), f)) {
 
         // Trim newline and carriage return characters
@@ -180,21 +185,55 @@ void parse_config(const char *filename, DependencyList *list) {
         if (trimmed[0] == '\0' || trimmed[0] == '#') continue;
 
         // Now line should start with "LINK <path> <branch>"
-        if (strncmp(trimmed, "LINK ", 5) != 0) {
+        if (strncmp(trimmed, "LINK ", 5) == 0) {
+            // ok
+        } else if (strncmp(trimmed, "ROOT_FOLDER ", 12) == 0) {
+            if (has_root_folder) {
+                fprintf(stderr, "Warning: Multiple ROOT_FOLDER entries found in %s. Using the first one: '%s'\n", filename, root_folder);
+                continue;
+            }
+            strncpy(root_folder, trim(trimmed + 12), sizeof(root_folder) - 1);
+            root_folder[sizeof(root_folder) - 1] = '\0'; // Ensure null-termination
+            printf("Root folder set to: '%s'\n", root_folder);
+            has_root_folder = 1;
+            continue;
+        } else {
             fprintf(stderr, "Warning: Ignoring invalid line in %s: '%s'\n", filename, trimmed);
             continue;
         }
 
         // Parse the line to extract path, depot and branch
         char *path = trim(trimmed + 5); // skip "LINK "
-
-        char *depot = extract_depot(path);     
-
+        char *depot = extract_depot(path);
+        
         char *branch = strchr(path, ' ');
         if (branch) {
             *branch++ = '\0'; // split the string into path and branch
             branch = trim(branch);
         }
+
+        if (!depot) {
+            
+            if (has_root_folder) {
+                printf("Adjusting path with root folder: '%s' + '%s'\n", root_folder, path);
+                char new_path[MAX_PATH];
+                snprintf(new_path, sizeof(new_path), "%s/%s", root_folder, path);
+                // free(path);
+                path = strdup(new_path);
+                printf("Adjusted path with root folder: '%s'\n", path);
+                depot = extract_depot(path);
+                if (!depot) {
+                    fprintf(stderr, "Warning: Invalid depot path in %s: '%s'\n", filename, path);
+                    // free(path);
+                    continue;
+                }
+            } else {
+                fprintf(stderr, "Warning: Invalid depot path in %s: '%s'\n", filename, path);
+                continue;
+            }
+
+        }
+
 
         if (DEBUG) {
             printf("Line: '%s'\n", line);
