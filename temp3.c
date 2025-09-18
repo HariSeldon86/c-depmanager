@@ -194,7 +194,7 @@ void parse_config(const char *filename, DependencyList *list) {
             }
             strncpy(root_folder, trim(trimmed + 12), sizeof(root_folder) - 1);
             root_folder[sizeof(root_folder) - 1] = '\0'; // Ensure null-termination
-            printf("Root folder set to: '%s'\n", root_folder);
+            if(DEBUG) printf("Root folder set to: '%s'\n", root_folder);
             has_root_folder = 1;
             continue;
         } else {
@@ -215,16 +215,13 @@ void parse_config(const char *filename, DependencyList *list) {
         if (!depot) {
             
             if (has_root_folder) {
-                printf("Adjusting path with root folder: '%s' + '%s'\n", root_folder, path);
                 char new_path[MAX_PATH];
                 snprintf(new_path, sizeof(new_path), "%s/%s", root_folder, path);
-                // free(path);
                 path = strdup(new_path);
-                printf("Adjusted path with root folder: '%s'\n", path);
+                if(DEBUG) printf("Adjusted path with root folder: '%s'\n", path);
                 depot = extract_depot(path);
                 if (!depot) {
                     fprintf(stderr, "Warning: Invalid depot path in %s: '%s'\n", filename, path);
-                    // free(path);
                     continue;
                 }
             } else {
