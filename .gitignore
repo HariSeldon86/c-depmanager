@@ -29,3 +29,17 @@
 
 # Ignore compiled Python bytecode
 __pycache__/
+
+# Ignore IDE specific files
+.vscode/
+
+# Ignore build directories
+build/
+
+# Ignore temp files
+*.tmp
+*.temp
+*.bak
+*.log
+*.swp
+

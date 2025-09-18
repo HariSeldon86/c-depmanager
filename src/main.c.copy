@@ -1,0 +1,209 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// #define TEST_COMMAND "p4 login -s"
+// #define TEST_COMMAND "p4 print -q  //codev_soda/mbdt/ProjectEnvs/Soda/Ecu/main/dependencies.cfg"
+// #define TEST_COMMAND "p4 files -e //application_software/ucs/Systems/.../dependencies.cfg"
+#define TEST_COMMAND "p4 files -e //application_software/ucs/.../dependencies.cfg"
+
+
+int _p4cmd(const char *cmd) {
+    char full_cmd[256];
+    snprintf(full_cmd, sizeof(full_cmd), "%s", cmd);
+    return system(full_cmd);
+}
+
+char* p4cmd3(const char* command) {
+    FILE *fp;
+    char buffer[1024];
+    char *result = NULL;
+    size_t result_size = 0;
+    
+    fp = popen(command, "r");
+    if (fp == NULL) {
+        return NULL;
+    }
+    
+    // Read all output into a dynamically allocated string
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        size_t buffer_len = strlen(buffer);
+        result = realloc(result, result_size + buffer_len + 1);
+        
+        if (result == NULL) {
+            pclose(fp);
+            return NULL;
+        }
+        
+        if (result_size == 0) {
+            strcpy(result, buffer);
+        } else {
+            strcat(result, buffer);
+        }
+        
+        result_size += buffer_len;
+    }
+    
+    pclose(fp);
+    return result;
+}
+
+int p4cmd2(const char *cmd, char *output, size_t output_size) {
+    // Declare variables
+    FILE *fp;
+    char buffer[1024]; // buffer for a single line of output
+    char full_cmd[256]; // full command to execute
+    snprintf(full_cmd, sizeof(full_cmd), "%s", cmd); // prepare the command
+    
+    // Open command for reading
+    fp = popen(full_cmd, "r");
+    if (fp == NULL) {
+        printf("Failed to run command: %s\n", full_cmd);
+        return 1;
+    }
+    
+    // Read the output line by line
+    // printf("Command output:\n");
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // printf("%s", buffer);
+        if (output && output_size > 0) {
+            strncat(output, buffer, output_size - strlen(output) - 1);
+        }
+    }
+    
+    // Close the pipe
+    pclose(fp);
+
+    return 0;
+}
+
+int p4cmd1(const char *cmd, char *output, size_t output_size) {
+    // Declare variables
+    FILE *fp;
+    char buffer[1024]; // buffer for a single line of output
+    char full_cmd[256]; // full command to execute
+    snprintf(full_cmd, sizeof(full_cmd), "%s", cmd); // prepare the command
+    
+    // Open command for reading
+    fp = popen(full_cmd, "r");
+    if (fp == NULL) {
+        printf("Failed to run command: %s\n", full_cmd);
+        return 1;
+    }
+    
+    // Read the output line by line
+    // printf("Command output:\n");
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // printf("%s", buffer);
+        if (output && output_size > 0) {
+            strncat(output, buffer, output_size - strlen(output) - 1);
+        }
+    }
+    
+    // Close the pipe
+    pclose(fp);
+
+    return 0;
+}
+
+// If you need to store output, use a single reallocation strategy
+char* p4cmd4(const char* command, size_t *output_len) {
+    FILE *fp = popen(command, "r");
+    if (!fp) return NULL;
+    
+    size_t capacity = 1024;  // Start with reasonable size
+    char *result = malloc(capacity);
+    if (!result) {
+        pclose(fp);
+        return NULL;
+    }
+    
+    size_t total_len = 0;
+    int c;
+    
+    // Read character by character to avoid buffer copying
+    while ((c = fgetc(fp)) != EOF) {
+        if (total_len >= capacity - 1) {
+            capacity *= 2;  // Double capacity when needed
+            char *new_result = realloc(result, capacity);
+            if (!new_result) {
+                free(result);
+                pclose(fp);
+                return NULL;
+            }
+            result = new_result;
+        }
+        result[total_len++] = c;
+    }
+    
+    result[total_len] = '\0';
+    pclose(fp);
+    
+    // Shrink to actual size to save memory
+    char *final_result = realloc(result, total_len + 1);
+    if (final_result) result = final_result;
+    
+    if (output_len) *output_len = total_len;
+    return result;
+}
+
+int test1(void) {
+    const char *command = TEST_COMMAND;
+    
+    int size = 1024*1000;
+    char *str = malloc(size); // string buffer on heap
+    
+    int ret = p4cmd1(command, str, size);
+    if (ret != 0) {
+        fprintf(stderr, "Error: '%s' failed with code %d\n", command, ret);
+        return 1;
+    }
+    printf("%s\n", str);
+    free(str); // free the allocated memory
+    return 0;
+}
+
+
+int test2(void) {
+    const char *command = TEST_COMMAND;
+    char output[1024*1000] = {0};
+    
+    int ret = p4cmd2(command, output, sizeof(output));
+    
+    if (ret != 0) {
+        fprintf(stderr, "Error: '%s' failed with code %d\n", command, ret);
+        return 1;
+    }
+    printf("%s\n", output);
+    return 0;
+}
+
+int test3(void) {
+    const char *command = TEST_COMMAND;
+    char *output = p4cmd3(command);
+    if (output) {
+        printf("%s\n", output);
+        free(output);
+        return 0;
+    } else {
+        printf("Failed to capture command output.\n");
+        return 1;
+    }
+}
+
+int test4(void) {
+    const char *command = TEST_COMMAND;
+    char *output = p4cmd4(command, NULL);
+    if (output) {
+        printf("%s\n", output);
+        free(output);
+        return 0;
+    } else {
+        printf("Failed to capture command output.\n");
+        return 1;
+    }
+}
+
+int main(void) {
+    return test4();
+}
