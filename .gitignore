@@ -43,3 +43,6 @@ build/
 *.log
 *.swp
 
+# Ignore dependency manager files
+**/*.cfg
+
