@@ -9,7 +9,7 @@ set "RED=[31m"
 set "RESET=[0m"
 
 SET SRC=src/*.c
-SET OUT=build/main.exe
+SET OUT=build/c-depmanager.exe
 SET CC=gcc
 SET CFLAGS=-Wall -Wextra -O2
 SET LDFLAGS=

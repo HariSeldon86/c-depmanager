@@ -46,3 +46,24 @@ char* get_file_content(FILE* fp) {
     
     return result;
 }
+
+
+// Trim leading and trailing spaces (in place)
+char* strtrim(char *str) {
+    char *end;
+
+    // Trim leading space, by moving the pointer forward until it points to the first non-space character
+    while (isspace((unsigned char)*str)) str++;
+
+    if (*str == 0)  // all spaces?
+        return str;
+
+    // Trim trailing space, by moving the end pointer backward until it points to the last non-space character
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) end--;
+
+    // Write new null terminator
+    *(end + 1) = '\0';
+
+    return str;
+}
